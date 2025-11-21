@@ -1,6 +1,7 @@
 import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, EmailStr, Field
 
 app = FastAPI()
 
@@ -12,6 +13,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+class ContactMessage(BaseModel):
+    name: str = Field(..., min_length=2, max_length=100)
+    email: EmailStr
+    message: str = Field(..., min_length=10, max_length=5000)
+
 @app.get("/")
 def read_root():
     return {"message": "Hello from FastAPI Backend!"}
@@ -19,6 +25,16 @@ def read_root():
 @app.get("/api/hello")
 def hello():
     return {"message": "Hello from the backend API!"}
+
+@app.post("/api/contact")
+def contact(payload: ContactMessage):
+    # In a real app you might send an email or store this in a DB.
+    # For this project we simply acknowledge receipt.
+    return {
+        "status": "ok",
+        "message": "Thanks for reaching out! We'll get back to you soon.",
+        "data": payload.model_dump(),
+    }
 
 @app.get("/test")
 def test_database():
